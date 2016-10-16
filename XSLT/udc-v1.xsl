@@ -19,7 +19,7 @@
 
     <!-- 
     
-    Questions or issues, and comments (JBH)
+    Comments (john.b.howard@ucd.ie)
     
     - references to related entities (mods:relatedItem[@type='otherVersion' or @type='original' or @type='otherFormat' or @type='references' or @type='references'] (other types may also occur)
     o at UCD otherVersion can refer to data visualisations referenced by a URI
@@ -29,11 +29,9 @@
     
     - MODS classification element is not referenced
     
-    - MODS part element is not referenced ; occurs commonly with regard to digitised journals and references to secondary sources
+    - MODS part element is not referenced ; occurs commonly with regard to digitised journals, references to secondary sources, etc.
     
     - MODS targetAudience is not referenced ; can be used to identify juvenile material, or material not appropriate for children (e.g., graphic depictions of violence)
-    
-    - MODS role element values only quoted in rdf:label value of dc:contributor element
     
     - comments and changes made by JBH are annotated with initials 'JBH'
     
@@ -192,7 +190,7 @@
         <!-- assume potential for use by other providers - JBH -->
         <xsl:choose>
             <xsl:when test="$provider_name = 'University College Dublin'">
-                <xsl:value-of select="substring-after(/mods/identifier[@type = 'uri'], 'fedora/')"/>
+                <xsl:value-of select="concat('https://data.ucd.ie/data/',substring-after(/mods/identifier[@type = 'uri'], 'fedora/'))"/>
             </xsl:when>
         </xsl:choose>
     </xsl:variable>
@@ -292,36 +290,6 @@
                             </xsl:choose>
                         </xsl:element>
                     </xsl:if>
-                    <!--
-                    <xsl:if test="contains(., 'eastlimit')">
-                        <xsl:element name="edm:Place">
-                            <xsl:attribute name="rdf:about">
-                                <xsl:choose>
-                                    <xsl:when test="contains(parent::cartographics/@valueURI,'geonames') or contains(parent::cartographics/@valueURI,'dbpedia')">
-                                        <xsl:value-of select="parent::cartographics/@valueURI"/>
-                                    </xsl:when>
-                                    <xsl:when test="contains(parent::geographic/@valueURI,'geonames') or contains(parent::geographic/@valueURI,'dbpedia')">
-                                        <xsl:value-of select="parent::geographic/@valueURI"/>
-                                    </xsl:when>
-                                    <xsl:otherwise>
-                                        <xsl:value-of select="concat('#spatial_box_',position(),'_Place')"/>
-                                    </xsl:otherwise>
-                                </xsl:choose>
-                            </xsl:attribute>
-                            <xsl:element name="dcterms:spatial">
-                                <xsl:attribute name="xsi:type">
-                                    <xsl:text>dcterms:Box</xsl:text>
-                                </xsl:attribute>
-                                <xsl:if test="../name/namePart">
-                                    <xsl:value-of
-                                        select="concat('name=', ../name/namePart, '; ')"/>
-                                </xsl:if>
-                                <xsl:value-of select="."/>
-                                <xsl:text>; projection=EPSG:4326</xsl:text>
-                            </xsl:element>
-                        </xsl:element>
-                    </xsl:if>
-                    -->
                 </xsl:for-each>
             </xsl:for-each>
 
@@ -372,98 +340,6 @@
                                 <xsl:attribute name="rdf:resource">
                                     <xsl:value-of select="@valueURI"/>
                                 </xsl:attribute>
-                                <xsl:for-each select="role/roleTerm">
-                                    <xsl:choose>
-                                        <xsl:when test=". = 'arc'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Architect</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'aut'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Author</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'cmp'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Compiler</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'cre'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Creator</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'ctb'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Contributor</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'dte'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Dedicatee</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'edt'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Editor</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'fmo'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Former owner</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'fnd'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Funder</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'lbt'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Librettist</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'pbl'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Publisher</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'pdr'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Project director</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'pht'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Photographer</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'rth'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Research team head</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'scl'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Sculptor</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'stl'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Storyteller</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                        <xsl:when test=". = 'spn'">
-                                            <xsl:attribute name="rdfs:label">
-                                                <xsl:text>Sponsor</xsl:text>
-                                            </xsl:attribute>
-                                        </xsl:when>
-                                    </xsl:choose>
-                                </xsl:for-each>
-                                <!--
-                                    <xsl:value-of select="namePart"/>
-                                    -->
                             </xsl:element>
                         </xsl:if>
                     </xsl:for-each>
@@ -617,7 +493,7 @@
 
                         <!-- URI Full ID -->
                         <xsl:element name="dc:identifier">
-                            <xsl:value-of select="concat('http://digital.ucd.ie/view/', $object_id)"
+                            <xsl:value-of select="concat('https://digital.ucd.ie/view/', $object_id)"
                             />
                         </xsl:element>
 
@@ -733,12 +609,14 @@
                                 <xsl:value-of select="normalize-space(.)"/>
                             </xsl:element>
                         </xsl:for-each>
-                        <xsl:element name="dc:rights">
-                            <xsl:attribute name="rdf:resource">
-                                <xsl:text>http://creativecommons.org/licenses/by-nc-sa/4.0/</xsl:text>
-                            </xsl:attribute>
-                            <xsl:text>Use of this resource is governed by the Creative Commons - Attribution, Non-Commercial, ShareAlike (BY-NC-SA) license.</xsl:text>
-                        </xsl:element>
+                    <xsl:element name="dc:rights">
+                        <xsl:attribute name="rdf:resource">
+                            <xsl:text>http://creativecommons.org/licenses/by-nc-sa/4.0/</xsl:text>
+                        </xsl:attribute>
+                    </xsl:element>
+                    <xsl:element name="dc:rights">
+                        <xsl:text>Use of this resource is governed by the Creative Commons - Attribution, Non-Commercial, ShareAlike (BY-NC-SA) license.</xsl:text>
+                    </xsl:element>
 
                         <!-- dc:source, id: 268 - changed JBH, does not always occur -->
                         <xsl:if test="recordInfo/recordContentSource">
@@ -900,14 +778,6 @@
                                         </xsl:with-param>
                                     </xsl:call-template>
                                 </xsl:attribute>
-                                <!-- not called for by EDM spec ...
-                                <xsl:element name="skos:prefLabel">
-                                    <xsl:attribute name="xml:lang">
-                                        <xsl:text>en</xsl:text>
-                                    </xsl:attribute>
-                                    <xsl:value-of select="."/>
-                                </xsl:element>
-                                -->
                             </xsl:element>
                         </xsl:for-each>
                         <xsl:for-each
@@ -1012,39 +882,24 @@
                         <xsl:element name="skos:prefLabel">
                             <xsl:value-of select="namePart"/>
                         </xsl:element>
-                        <!--
                         <xsl:for-each select="role/roleTerm">
                             <xsl:choose>
                                 <xsl:when test=".='arc'">
-                                    <xsl:element name="marcrel:arc">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Architect</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Architect</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='aut'">
-                                    <xsl:element name="marcrel:aut">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Author</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Author</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='cmp'">
-                                    <xsl:element name="marcrel:cmp">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Compiler</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Composer</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
+                                <!--
                                 <xsl:when test=".='cre'">
                                     <xsl:element name="marcrel:cre">
                                         <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
@@ -1065,56 +920,33 @@
                                         </xsl:element>
                                     </xsl:element>
                                 </xsl:when>
+                                -->
                                 <xsl:when test=".='dte'">
-                                    <xsl:element name="marcrel:dte">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Dedicatee</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Dedicatee</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='edt'">
-                                    <xsl:element name="marcrel:edt">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Editor</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Editor</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='fmo'">
-                                    <xsl:element name="marcrel:fmo">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Former owner</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Former owner</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='fnd'">
-                                    <xsl:element name="marcrel:fnd">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Funder</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Sponsoring body</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='lbt'">
-                                    <xsl:element name="marcrel:lbt">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Librettist</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Librettist</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
+                                <!--
                                 <xsl:when test=".='pbl'">
                                     <xsl:element name="marcrel:pbl">
                                         <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
@@ -1135,16 +967,13 @@
                                         </xsl:element>
                                     </xsl:element>
                                 </xsl:when>
+                                -->
                                 <xsl:when test=".='pht'">
-                                    <xsl:element name="marcrel:pht">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Photographer</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Photographer</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
+                                <!--
                                 <xsl:when test=".='rth'">
                                     <xsl:element name="marcrel:rth">
                                         <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
@@ -1155,43 +984,28 @@
                                         </xsl:element>
                                     </xsl:element>
                                 </xsl:when>
+                                -->
                                 <xsl:when test=".='scl'">
-                                    <xsl:element name="marcrel:scl">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Sculptor</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Sculptor</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='stl'">
-                                    <xsl:element name="marcrel:stl">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Storyteller</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Storyteller</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                                 <xsl:when test=".='spn'">
-                                    <xsl:element name="marcrel:spn">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Sponsor</xsl:text>
-                                        </xsl:element>
+                                    <xsl:element name="rdaGr2:professionOrOccupation">
+                                        <xsl:text>Sponsoring body</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
                             </xsl:choose>
                         </xsl:for-each>
-                        -->
                         
                     </xsl:element>
                 </xsl:if>
-            </xsl:for-each>            
+            </xsl:for-each>
             
             <!-- WEB RESOURCE -->
             <xsl:if test="$resource_id">
@@ -1208,28 +1022,6 @@
                     </xsl:element>
 
                     <!-- dcterms:extent, id: xx - Nota bene: use of extent element more variable than assumed in original XSLT - JBH -->
-                    <!--
-                    <xsl:element name="dcterms:extent">
-                        <xsl:attribute name="xml:lang">
-                            <xsl:value-of select="'en'"/>
-                        </xsl:attribute>
-                        <xsl:value-of
-                            select="/mods/relatedItem[@type = 'constituent'][1]/physicalDescription/extent[1]"
-                        />
-                    </xsl:element>
-                    <xsl:element name="dcterms:extent">
-                        <xsl:value-of
-                            select="concat(/mods/relatedItem[@type = 'constituent'][1]/physicalDescription/extent[@unit = 'MB'], ' MB')"
-                        />
-                    </xsl:element>
-                    <xsl:element name="dcterms:extent">
-                        <xsl:value-of
-                            select="concat(/mods/relatedItem[@type = 'constituent'][1]/physicalDescription/extent[@unit = 'pixels'], ' pixels')"
-                        />
-                    </xsl:element>
- -->
-
-                    <!-- dcterms:extent, id: xx - JBH-->
                     <xsl:for-each
                         select="/mods/relatedItem[@type = 'constituent'][1]/physicalDescription/extent">
                         <xsl:choose>
@@ -1315,7 +1107,6 @@
 
             <!-- Check for mandatory elements -->
             <xsl:if test="$object_id">
-                
                 <!-- ORE AGGREGATION -->
                 <xsl:element name="ore:Aggregation">
 
@@ -1346,18 +1137,12 @@
                                 <xsl:value-of
                                     select="location/physicalLocation[@type = 'institution']"/>
                             </xsl:element>
-                            <!--<xsl:element name="edm:dataProvider">
-                                <xsl:value-of select="$provider_name"/>
-                            </xsl:element>-->
                         </xsl:when>
                         <xsl:when test="location/physicalLocation[@type = 'repository']">
                             <xsl:element name="edm:dataProvider">
                                 <xsl:value-of
                                     select="location/physicalLocation[@type = 'repository']"/>
                             </xsl:element>
-                            <!--<xsl:element name="edm:dataProvider">
-                                <xsl:value-of select="$provider_name"/>
-                            </xsl:element>-->
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:element name="edm:dataProvider">
@@ -1416,8 +1201,7 @@
                     <!-- edm:rights, id: 229 -->
                     <xsl:element name="edm:rights">
                         <xsl:attribute name="rdf:resource" select="$rights"/>
-                    </xsl:element>
-                    
+                    </xsl:element>                    
 
                 </xsl:element>
                 <!-- ./ORE AGGREGATION -->
@@ -1435,14 +1219,6 @@
                     <xsl:element name="dcterms:conformsTo">
                         <xsl:attribute name="rdf:resource">
                             <xsl:text>http://iiif.io/api/image</xsl:text>
-                        </xsl:attribute>
-                    </xsl:element>
-
-                    <!-- dcterms:isReferencedBy JBH -->
-
-                    <xsl:element name="dcterms:isReferencedBy">
-                        <xsl:attribute name="rdf:resource">
-                            <xsl:value-of select="concat($baseUrl_manifest, $object_id)"/>
                         </xsl:attribute>
                     </xsl:element>
 
@@ -1501,7 +1277,7 @@
             <xsl:when test="$code = 'eng'">en</xsl:when>
             <xsl:when test="$code = 'spa'">es</xsl:when>
             <xsl:when test="$code = 'fre'">fr</xsl:when>
-            <xsl:when test="$code = 'gle'">ga</xsl:when>
+                <xsl:when test="$code = 'gle'">ga</xsl:when>
             <xsl:when test="$code = 'sth'">ga</xsl:when>
             <xsl:when test="$code = 'gla'">gd</xsl:when>
             <xsl:when test="$code = 'lat'">la</xsl:when>
