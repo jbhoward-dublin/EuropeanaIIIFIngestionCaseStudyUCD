@@ -18,8 +18,10 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- 
+        
+    Nota bene: portions of Pierre's original XSLT are commented
     
-    Comments (john.b.howard@ucd.ie)
+    Outstanding questions or issues, and comments (JBH)
     
     - references to related entities (mods:relatedItem[@type='otherVersion' or @type='original' or @type='otherFormat' or @type='references' or @type='references'] (other types may also occur)
     o at UCD otherVersion can refer to data visualisations referenced by a URI
@@ -29,11 +31,15 @@
     
     - MODS classification element is not referenced
     
-    - MODS part element is not referenced ; occurs commonly with regard to digitised journals, references to secondary sources, etc.
+    - MODS part element is not referenced ; occurs commonly with regard to digitised journals and references to secondary sources
     
     - MODS targetAudience is not referenced ; can be used to identify juvenile material, or material not appropriate for children (e.g., graphic depictions of violence)
     
+    - MODS role element values only quoted in rdf:label value of dc:contributor element
+    
     - comments and changes made by JBH are annotated with initials 'JBH'
+    
+    - dcterms:isPartOf and some other elements hard-coded for UCD usage
     
     -->
 
@@ -43,7 +49,7 @@
     <!-- PARAMETERS added JBH -->
     <!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-->
 
-    <!-- assume potential for other orgs using the XSLT, so treat as configuration parameters -->
+    <!-- assume potential for other orgs may adapt the XSLT, so treat as configuration parameters -->
 
     <!-- Strings changed JBH -->
     <xsl:param name="baseUrl_manifest">
@@ -64,8 +70,20 @@
     </xsl:param>
 
     <xsl:param name="format">
-        <!--<xsl:text>image/png</xsl:text>-->
-        <xsl:text>image/jpeg</xsl:text>
+        <!-- changed to accommodate additional UCD media types -->
+        <xsl:for-each select="typeOfResource">
+            <xsl:choose>
+                <xsl:when test="text() = 'text'">
+                    <xsl:text>application/quicktime</xsl:text>
+                </xsl:when>
+                <xsl:when test="text() = 'moving image'">
+                    <xsl:text>image/jpeg</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>image/jpeg</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:for-each>
     </xsl:param>
 
     <xsl:param name="provider">
@@ -247,52 +265,12 @@
             <xsl:namespace name="xml">http://www.w3.org/XML/1998/namespace</xsl:namespace>
             <xsl:namespace name="xsi">http://www.w3.org/2001/XMLSchema-instance</xsl:namespace>
 
-            <!-- geospatial coordinates -->                
+            <!-- geospatial coordinates 
             
-            <xsl:for-each select="subject/cartographics">
-                <xsl:for-each select="coordinates">
-                    <xsl:if test="contains(., ',')">
-                        <xsl:element name="edm:Place">
-                            <xsl:attribute name="rdf:about">
-                                <xsl:choose>
-                                    <xsl:when test="contains(parent::cartographics/@valueURI,'geonames') or contains(parent::cartographics/@valueURI,'dbpedia')">
-                                        <xsl:value-of select="parent::cartographics/@valueURI"/>
-                                    </xsl:when>
-                                    <xsl:when test="contains(parent::geographic/@valueURI,'geonames') or contains(parent::geographic/@valueURI,'dbpedia')">
-                                        <xsl:value-of select="parent::geographic/@valueURI"/>
-                                    </xsl:when>
-                                    <xsl:otherwise>
-                                        <xsl:value-of select="concat('#spatial_point_',position(),'_Place')"/>
-                                    </xsl:otherwise>
-                                </xsl:choose>
-                            </xsl:attribute>
-                            <xsl:element name="wgs84_pos:lat">
-                                <xsl:value-of select="substring-before(., ',')"/>
-                            </xsl:element>
-                            <xsl:element name="wgs84_pos:long">
-                                <xsl:value-of select="substring-after(., ',')"/>
-                            </xsl:element>
-                            <xsl:choose>
-                                <xsl:when test="../../geographic">
-                                    <xsl:element name="skos:prefLabel">
-                                        <xsl:for-each select="../../geographic">
-                                            <xsl:choose>
-                                                <xsl:when test="position() &lt; last()">
-                                                    <xsl:value-of select="concat(.,', ')"/>
-                                                </xsl:when>
-                                                <xsl:otherwise>
-                                                    <xsl:value-of select="."/>
-                                                </xsl:otherwise>
-                                            </xsl:choose>
-                                        </xsl:for-each>
-                                    </xsl:element>
-                                </xsl:when>
-                            </xsl:choose>
-                        </xsl:element>
-                    </xsl:if>
-                </xsl:for-each>
-            </xsl:for-each>
-
+                edm:Place eliminated as per Pierre 10 Nov 2016
+                
+            -->                
+            
             <!-- PROVIDED CHO -->
             <!-- Check for mandatory elements on edm:ProvidedCHO -->
             <xsl:if test="$object_id">
@@ -410,7 +388,7 @@
                                         <xsl:text>Citation/reference: </xsl:text>
                                     </xsl:when>
                                     <xsl:when test="@type = 'creation/production credits'">
-                                        <xsl:text>Xreation/production credits: </xsl:text>
+                                        <xsl:text>Creation/production credits: </xsl:text>
                                     </xsl:when>
                                     <xsl:when test="@type = 'funding'">
                                         <xsl:text>Funding: </xsl:text>
@@ -463,11 +441,19 @@
                             </xsl:element>
                         </xsl:if>
                     </xsl:for-each>
-                    <xsl:if test="string-length($format) &gt; 0">
-                        <xsl:element name="dc:format">
-                            <xsl:value-of select="$format"/>
-                        </xsl:element>
-                    </xsl:if>
+                    
+                    <xsl:choose>
+                        <xsl:when test="typeOfResource='moving image'">
+                            <xsl:element name="dc:format">
+                                <xsl:value-of select="'application/quicktime'"/>
+                            </xsl:element>
+                        </xsl:when>
+                        <xsl:when test="string-length($format) &gt; 0">
+                            <xsl:element name="dc:format">
+                                <xsl:value-of select="$format"/>
+                            </xsl:element>
+                        </xsl:when>
+                    </xsl:choose>
 
                         <!-- dc:identifier, id: 255 -->
                         <!-- Local ID - does not always occur JBH-->
@@ -511,24 +497,6 @@
                                 <xsl:value-of select="identifier[@type = 'oclcnum']"/>
                             </xsl:element>
                         </xsl:if>
-
-                        <!-- dc:language, id: 257 -->
-                        <!--
-                        <xsl:for-each select="language/languageTerm[@type = 'code']/text() | language/scriptTerm[@type = 'code']">
-                        -->
-                        <!-- ISO LANG ALIGNEMENT  -->
-                        <!--<xsl:variable name="idx_lang"
-                                select="index-of($map_lang/map, replace(., '^\s*(.+?)\s*$', '$1'))"/>-->
-                        <!-- suppressed in favor of alternative below JBH -->
-                        <!--
-                            <xsl:element name="dc:language"> -->
-                        <!-- </xsl:for-each> -->
-                        <!--<xsl:value-of select="$map_lang/map[$idx_lang]/@value"/>-->
-                        <!--
-                                <xsl:value-of select="."/>
-                            </xsl:element>
-                        </xsl:for-each>
-                            -->
 
                         <!-- dc:language, id: 257 -->
 
@@ -723,6 +691,9 @@
                                 </xsl:choose>
                             </xsl:variable>
                             <xsl:value-of select="concat($nonSort,normalize-space(.))"/>
+                            <xsl:if test="../subTitle">
+                                <xsl:value-of select="concat(' : ',../subTitle)"/>
+                            </xsl:if>
                         </xsl:element>
                     </xsl:for-each>
                     
@@ -731,42 +702,37 @@
                         <xsl:for-each select="genre[@valueURI]">
                             <xsl:element name="dc:type">
                                 <xsl:attribute name="rdf:resource" select="@valueURI"/>
+                                <!-- 
+                                    <xsl:value-of select="."/> -->
                             </xsl:element>
-                            <xsl:value-of select="."/>
                         </xsl:for-each>
 
-                        <!-- Litterals -->
-                        <xsl:for-each select="genre[not(@valueURI)] | typeOfResource">
+                    <!-- Litterals -->
+                    <xsl:for-each select="genre[not(@valueURI)] | typeOfResource">
+                        <!-- if addedd JBH 2016-10-24 -->
+                        <xsl:if test="not(preceding::genre[not(@valueURI)] = text()) and not(preceding::typeOfResource = text())">
                             <xsl:element name="dc:type">
                                 <xsl:attribute name="xml:lang" select="'en'"/>
                                 <xsl:value-of select="."/>
                             </xsl:element>
-                        </xsl:for-each>
+                        </xsl:if>
+                    </xsl:for-each>
 
 
                         <!-- HIERARCHIES -->
                         <!-- dcterms:isPartOf, id: 508 -->
-                        <!-- PARENT ELEMENT -->
+                        <!-- PARENT ELEMENT - hard coded for UCD usage -->
                         <xsl:if test="relatedItem[@type = 'host']">
                             <xsl:for-each select="relatedItem[@type = 'host']">
-                                <xsl:element name="dcterms:isPartOf">
-                                    <xsl:attribute name="rdf:resource"
-                                        select="substring-after(identifier[@type = 'uri'], 'fedora/')"
-                                    />
-                                </xsl:element>
+                                <xsl:if test="identifier[@type = 'uri']">
+                                    <xsl:element name="dcterms:isPartOf">
+                                        <xsl:attribute name="rdf:resource"
+                                            select="concat('https://data.ucd.ie/data/',substring-after(identifier[@type = 'uri'], 'fedora/'))"/>
+                                    </xsl:element>
+                                </xsl:if>
                             </xsl:for-each>
                         </xsl:if>
                         <!-- ./HIERARCHIES -->
-
-                        <!-- dcterms:spatial, id: 335 -->
-                        <!-- REMOVING THE DUPLICATES -->
-                        <!-- commented JBH
-                        <xsl:for-each select="distinct-values(subject/geographic)">
-                            <xsl:element name="dcterms:spatial">
-                                <xsl:value-of select="."/>
-                            </xsl:element>
-                        </xsl:for-each>
-                        -->
 
                         <!-- new JBH -->
                         <xsl:for-each select="subject/geographic[@authority = 'geonames']">
@@ -791,65 +757,53 @@
                             </xsl:if>
                         </xsl:for-each>
                     
-                    <!-- refers back to edm:Place - JBH -->
+                    <!-- refers back to edm:Place - CHANGED to following 10 Nov 2016 - JBH -->
                     
                     <xsl:for-each select="subject/cartographics">
                         <xsl:for-each select="coordinates">
                             <xsl:if test="contains(., ',')">
                                 <xsl:element name="dcterms:spatial">
-                                    <xsl:attribute name="rdf:resource">
-                                        <xsl:choose>
-                                            <xsl:when test="contains(parent::cartographics/@valueURI,'geonames') or contains(parent::cartographics/@valueURI,'dbpedia')">
-                                                <xsl:value-of select="parent::cartographics/@valueURI"/>
-                                            </xsl:when>
-                                            <xsl:when test="contains(parent::geographic/@valueURI,'geonames') or contains(parent::geographic/@valueURI,'dbpedia')">
-                                                <xsl:value-of select="parent::geographic/@valueURI"/>
-                                            </xsl:when>
-                                            <xsl:otherwise>
-                                                <xsl:value-of select="concat('#spatial_point_',position(),'_Place')"/>
-                                            </xsl:otherwise>
-                                        </xsl:choose>
-                                    </xsl:attribute>
+                                    <xsl:value-of select="normalize-space(.)"/>
                                 </xsl:element>
                             </xsl:if>
                         </xsl:for-each>
                     </xsl:for-each>
                     
-                        <!-- edm:type, id: 377 ; assume that stylesheet would also process non-image objects JBH -->
-                        <xsl:element name="edm:type">
-                            <xsl:choose>
-                                <xsl:when test="typeOfResource = 'still image'">
-                                    <xsl:value-of select="'IMAGE'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'cartographic'">
-                                    <xsl:value-of select="'IMAGE'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'notated music'">
-                                    <xsl:value-of select="'IMAGE'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'sound recording'">
-                                    <xsl:value-of select="'SOUND'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'sound recording-musical'">
-                                    <xsl:value-of select="'SOUND'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'sound recording-nonmusical'">
-                                    <xsl:value-of select="'SOUND'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'moving image'">
-                                    <xsl:value-of select="'VIDEO'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'three dimensional object'">
-                                    <xsl:value-of select="'3D'"/>
-                                </xsl:when>
-                                <xsl:when test="typeOfResource = 'text'">
-                                    <xsl:value-of select="'TEXT'"/>
-                                </xsl:when>
-                                <xsl:otherwise>
-                                    <xsl:text>IMAGE</xsl:text>
-                                </xsl:otherwise>
-                            </xsl:choose>
-                        </xsl:element>
+                    <!-- edm:type, id: 377 ; assume that stylesheet would also process non-image objects JBH -->
+                    <xsl:element name="edm:type">
+                        <xsl:choose>
+                            <xsl:when test="typeOfResource = 'still image'">
+                                <xsl:value-of select="'IMAGE'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'cartographic'">
+                                <xsl:value-of select="'IMAGE'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'notated music'">
+                                <xsl:value-of select="'IMAGE'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'sound recording'">
+                                <xsl:value-of select="'SOUND'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'sound recording-musical'">
+                                <xsl:value-of select="'SOUND'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'sound recording-nonmusical'">
+                                <xsl:value-of select="'SOUND'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'moving image'">
+                                <xsl:value-of select="'VIDEO'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'three dimensional object'">
+                                <xsl:value-of select="'3D'"/>
+                            </xsl:when>
+                            <xsl:when test="typeOfResource = 'text'">
+                                <xsl:value-of select="'TEXT'"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:text>IMAGE</xsl:text>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:element>
                     
                 </xsl:element>
             </xsl:if>
@@ -899,28 +853,6 @@
                                         <xsl:text>Composer</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
-                                <!--
-                                <xsl:when test=".='cre'">
-                                    <xsl:element name="marcrel:cre">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Creator</xsl:text>
-                                        </xsl:element>
-                                    </xsl:element>
-                                </xsl:when>
-                                <xsl:when test=".='ctb'">
-                                    <xsl:element name="marcrel:ctb">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Contributor</xsl:text>
-                                        </xsl:element>
-                                    </xsl:element>
-                                </xsl:when>
-                                -->
                                 <xsl:when test=".='dte'">
                                     <xsl:element name="rdaGr2:professionOrOccupation">
                                         <xsl:text>Dedicatee</xsl:text>
@@ -946,45 +878,11 @@
                                         <xsl:text>Librettist</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
-                                <!--
-                                <xsl:when test=".='pbl'">
-                                    <xsl:element name="marcrel:pbl">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Publisher</xsl:text>
-                                        </xsl:element>
-                                    </xsl:element>
-                                </xsl:when>
-                                <xsl:when test=".='pdr'">
-                                    <xsl:element name="marcrel:pdr">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Project director</xsl:text>
-                                        </xsl:element>
-                                    </xsl:element>
-                                </xsl:when>
-                                -->
                                 <xsl:when test=".='pht'">
                                     <xsl:element name="rdaGr2:professionOrOccupation">
                                         <xsl:text>Photographer</xsl:text>
                                     </xsl:element>
                                 </xsl:when>
-                                <!--
-                                <xsl:when test=".='rth'">
-                                    <xsl:element name="marcrel:rth">
-                                        <xsl:attribute name="rdf:resource" exclude-result-prefixes="#all">
-                                            <xsl:value-of select="@valueURI"/>
-                                        </xsl:attribute>
-                                        <xsl:element name="skos:prefLabel">
-                                            <xsl:text>Research team head</xsl:text>
-                                        </xsl:element>
-                                    </xsl:element>
-                                </xsl:when>
-                                -->
                                 <xsl:when test=".='scl'">
                                     <xsl:element name="rdaGr2:professionOrOccupation">
                                         <xsl:text>Sculptor</xsl:text>
@@ -1005,64 +903,105 @@
                         
                     </xsl:element>
                 </xsl:if>
-            </xsl:for-each>
+            </xsl:for-each>            
             
             <!-- WEB RESOURCE -->
+            
             <xsl:if test="$resource_id">
-
-                <!-- edm:WebResource, id: 5 -->
-                <xsl:element name="edm:WebResource">
-                    <xsl:attribute name="rdf:about">
-                        <xsl:value-of select="concat($baseUrl_service, $resource_id, $hqPicture)"/>
-                    </xsl:attribute>
-
-                    <!-- dc:format, id: 13 -->
-                    <xsl:element name="dc:format">
-                        <xsl:value-of select="$format"/>
-                    </xsl:element>
-
-                    <!-- dcterms:extent, id: xx - Nota bene: use of extent element more variable than assumed in original XSLT - JBH -->
-                    <xsl:for-each
-                        select="/mods/relatedItem[@type = 'constituent'][1]/physicalDescription/extent">
-                        <xsl:choose>
-                            <xsl:when test="position() = 1">
-                                <xsl:element name="dcterms:extent">
-                                    <xsl:attribute name="xml:lang">
-                                        <xsl:value-of select="'en'"/>
-                                    </xsl:attribute>
-                                    <xsl:value-of select="normalize-space(.)"/>
+                <!-- EDM may also be used to aggregate media other than images JBH -->
+                <xsl:choose>
+                    <xsl:when test="typeOfResource = 'still image'">                    
+                        <!-- edm:WebResource, id: 5 -->
+                        <xsl:element name="edm:WebResource">
+                            <xsl:attribute name="rdf:about">
+                                <xsl:value-of select="concat($baseUrl_service, $resource_id, $hqPicture)"/>
+                            </xsl:attribute>
+                            
+                            <!-- dc:format, id: 13 -->
+                            <xsl:element name="dc:format">
+                                <!-- for still image default delivery via IIIF is JPEG -->
+                                <xsl:value-of select="'image/jpeg'"/>
+                            </xsl:element>
+                            <!-- dcterms:extent, id: xx - JBH-->
+                            <xsl:for-each
+                                select="/mods/relatedItem[@type = 'constituent'][1]/physicalDescription/extent">
+                                <xsl:choose>
+                                    <xsl:when test="position() = 1">
+                                        <xsl:element name="dcterms:extent">
+                                            <xsl:attribute name="xml:lang">
+                                                <xsl:value-of select="'en'"/>
+                                            </xsl:attribute>
+                                            <xsl:value-of select="normalize-space(.)"/>
+                                        </xsl:element>
+                                    </xsl:when>
+                                    <xsl:when test="not(@unit = 'KB') and not(@unit = 'MB')">
+                                        <xsl:element name="dcterms:extent">
+                                            <xsl:choose>
+                                                <xsl:when test="@unit">
+                                                    <xsl:value-of select="concat(., ' ', @unit)"/>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <xsl:value-of select="."/>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:element>
+                                    </xsl:when>
+                                </xsl:choose>
+                            </xsl:for-each>
+                            
+                            <!-- dcterms:isReferencedBy, id: 77 -->
+                            <xsl:element name="dcterms:isReferencedBy">
+                                <xsl:attribute name="rdf:resource">
+                                    <xsl:value-of select="concat($baseUrl_manifest, $object_id)"/>
+                                </xsl:attribute>
+                            </xsl:element>
+                            
+                            <!-- svcs:has_service, id: 82 -->
+                            <xsl:element name="svcs:has_service">
+                                <xsl:attribute name="rdf:resource">
+                                    <xsl:value-of select="concat($baseUrl_service, $resource_id)"/>
+                                </xsl:attribute>
+                            </xsl:element>
+                            
+                        </xsl:element>
+                    </xsl:when>
+                    <!-- VIDEO -->
+                    <xsl:when test="typeOfResource = 'moving image'">
+                        <xsl:for-each select="relatedItem[@type = 'otherFormat' and @displayLabel='Other format']">
+                            <!-- //player.vimeo.com/video/136727285 -->
+                            <xsl:variable name="service">
+                                <xsl:choose>
+                                    <xsl:when test="contains(identifer[@type='local'],'youtube')">
+                                        <xsl:value-of select="'https://www.youtube.com/'"/>
+                                    </xsl:when>
+                                    <xsl:when test="contains(identifer[@type='local'],'vimeo')">
+                                        <xsl:value-of select="'https://vimeo.com/'"/>
+                                    </xsl:when>
+                                </xsl:choose>
+                            </xsl:variable>
+                            <xsl:variable name="about_link">
+                                <xsl:choose>
+                                    <xsl:when test="contains(identifier,'youtube')">
+                                        <xsl:value-of select="concat('https://youtu.be/',substring-after(identifier,'urn:youtube:'))"/>
+                                    </xsl:when>
+                                    <xsl:when test="contains(identifier,'vimeo')">
+                                        <xsl:value-of select="concat('https://vimeo.com/',substring-after(identifier,'urn:vimeo:'))"/>
+                                    </xsl:when>
+                                </xsl:choose>
+                            </xsl:variable>
+                            <xsl:element name="edm:WebResource">
+                                <xsl:attribute name="rdf:about">
+                                    <xsl:value-of select="$about_link"/>
+                                </xsl:attribute>
+                                <!-- dc:format, id: 13 -->
+                                <xsl:element name="dc:format">
+                                    <xsl:text>video/quicktime</xsl:text>
                                 </xsl:element>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <xsl:element name="dcterms:extent">
-                                    <xsl:choose>
-                                        <xsl:when test="@unit">
-                                            <xsl:value-of select="concat(., ' ', @unit)"/>
-                                        </xsl:when>
-                                        <xsl:otherwise>
-                                            <xsl:value-of select="."/>
-                                        </xsl:otherwise>
-                                    </xsl:choose>
-                                </xsl:element>
-                            </xsl:otherwise>
-                        </xsl:choose>
-                    </xsl:for-each>
-
-                    <!-- dcterms:isReferencedBy, id: 77 -->
-                    <xsl:element name="dcterms:isReferencedBy">
-                        <xsl:attribute name="rdf:resource">
-                            <xsl:value-of select="concat($baseUrl_manifest, $object_id)"/>
-                        </xsl:attribute>
-                    </xsl:element>
-
-                    <!-- svcs:has_service, id: 82 -->
-                    <xsl:element name="svcs:has_service">
-                        <xsl:attribute name="rdf:resource">
-                            <xsl:value-of select="concat($baseUrl_service, $resource_id)"/>
-                        </xsl:attribute>
-                    </xsl:element>
-
-                </xsl:element>
+                                <xsl:comment>Need to add references to duration ; possibly to extent (filesize) ; possibly to svcs:has_service</xsl:comment>
+                            </xsl:element>
+                        </xsl:for-each>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:if>
             <!-- ./WEB RESOURCE -->
 
@@ -1107,6 +1046,7 @@
 
             <!-- Check for mandatory elements -->
             <xsl:if test="$object_id">
+                
                 <!-- ORE AGGREGATION -->
                 <xsl:element name="ore:Aggregation">
 
@@ -1201,7 +1141,8 @@
                     <!-- edm:rights, id: 229 -->
                     <xsl:element name="edm:rights">
                         <xsl:attribute name="rdf:resource" select="$rights"/>
-                    </xsl:element>                    
+                    </xsl:element>
+                    
 
                 </xsl:element>
                 <!-- ./ORE AGGREGATION -->
@@ -1277,7 +1218,7 @@
             <xsl:when test="$code = 'eng'">en</xsl:when>
             <xsl:when test="$code = 'spa'">es</xsl:when>
             <xsl:when test="$code = 'fre'">fr</xsl:when>
-                <xsl:when test="$code = 'gle'">ga</xsl:when>
+            <xsl:when test="$code = 'gle'">ga</xsl:when>
             <xsl:when test="$code = 'sth'">ga</xsl:when>
             <xsl:when test="$code = 'gla'">gd</xsl:when>
             <xsl:when test="$code = 'lat'">la</xsl:when>
